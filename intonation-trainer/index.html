@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLP Voice Lab Intonation Trainer</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#F59E0B">
+    <meta name="description" content="Professional voice intonation pattern training for speech therapy">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Intonation Trainer">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎶</text></svg>">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
+    
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="hidden fixed top-0 left-0 right-0 bg-primary text-white p-3 z-50">
+        <div class="flex items-center justify-between max-w-4xl mx-auto">
+            <span>📱 Install Intonation Trainer for offline use</span>
+            <div>
+                <button id="installBtn" class="bg-white text-primary px-3 py-1 rounded text-sm mr-2">Install</button>
+                <button id="dismissBtn" class="text-white opacity-75">✕</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🎶</div>
+            <h1 class="text-3xl font-bold mb-2">SLP Voice Lab</h1>
+            <h2 class="text-xl text-primary font-semibold">Intonation Trainer</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Professional voice intonation pattern training</p>
+            <a href="../" class="text-blue-500 hover:text-blue-700 text-sm mt-2 inline-block">← Back to Main Menu</a>
+        </div>
+        
+        <!-- Setup Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Session Setup</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Client Name</label>
+                    <input type="text" id="clientName" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter client name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Practice Sentence</label>
+                    <input type="text" id="practiceText" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter practice sentence" value="Hello, how are you today?">
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Recording Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="text-xl font-bold mb-6">1️⃣ Therapist: Create Intonation Model</h3>
+            
+            <div class="bg-white dark:bg-gray-700 rounded-lg p-6 mb-6">
+                <div class="text-center mb-6">
+                    <div class="text-lg mb-2">Record the target intonation pattern:</div>
+                    <div id="displaySentence" class="text-3xl font-bold text-primary mb-4">"Hello, how are you today?"</div>
+                </div>
+                
+                <div class="flex flex-wrap gap-4 justify-center mb-4">
+                    <button id="recordModel" class="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium text-lg">🎤 Record Model</button>
+                    <button id="stopModelRecording" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors font-medium disabled:opacity-50" disabled>⏹️ Stop</button>
+                    <button id="playModel" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50" disabled>▶️ Play Back</button>
+                    <button id="clearModel" class="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50" disabled>🗑️ Clear</button>
+                </div>
+                
+                <div id="modelStatus" class="text-center text-lg font-medium text-gray-600 dark:text-gray-400">No model recorded yet</div>
+            </div>
+        </div>
+
+        <!-- Visualization Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="text-xl font-bold mb-4">Intonation Pattern Visualization</h3>
+            <div class="relative bg-white dark:bg-gray-700 rounded-lg p-6 h-80">
+                <canvas id="intonationCanvas" class="w-full h-full rounded"></canvas>
+                <div class="absolute top-4 left-4 text-sm">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-green-500 w-4 h-3 mr-2 rounded"></div>
+                        <span>Model Pattern</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="bg-blue-500 w-4 h-3 mr-2 rounded"></div>
+                        <span>Student Attempt</span>
+                    </div>
+                </div>
+                <div class="absolute bottom-4 right-4 bg-primary text-white px-3 py-1 rounded text-sm font-medium">
+                    Pattern Match: <span id="patternScore">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Practice Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="text-xl font-bold mb-6">2️⃣ Student: Practice Intonation</h3>
+            
+            <div class="text-center mb-6">
+                <div class="text-lg mb-2">Practice this sentence with the same intonation:</div>
+                <div id="practiceDisplay" class="text-3xl font-bold text-primary mb-6">"Hello, how are you today?"</div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                        <div class="text-3xl font-bold text-primary" id="currentScore">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Match Score</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                        <div class="text-3xl font-bold text-green-600" id="bestScore">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Best Score</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                        <div class="text-3xl font-bold text-blue-600" id="attempts">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Attempts</div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button id="startPractice" class="bg-primary text-white px-8 py-3 rounded-lg hover:bg-yellow-600 transition-colors font-medium text-lg disabled:opacity-50" disabled>🎤 Start Practice</button>
+                    <button id="stopPractice" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium disabled:opacity-50" disabled>⏹️ Stop Practice</button>
+                </div>
+                
+                <div id="practiceStatus" class="text-center mt-4 text-lg font-medium">Record a model pattern first</div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="bg-amber-50 dark:bg-amber-900 rounded-lg p-6 mb-6">
+            <div class="text-center">
+                <div class="font-bold mb-2 text-2xl">📚 How to Use</div>
+                <div class="text-left max-w-2xl mx-auto space-y-2">
+                    <div><strong>1. Therapist:</strong> Record a model intonation pattern</div>
+                    <div><strong>2. Student:</strong> Practice matching the same pitch pattern</div>
+                    <div><strong>3. Compare:</strong> Visual feedback shows how close the match is</div>
+                    <div><strong>4. Improve:</strong> Try multiple times to increase accuracy</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session History -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Session History</h3>
+                <button id="exportData" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm">📊 Export CSV</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-2">Client</th>
+                            <th class="text-left py-2">Date</th>
+                            <th class="text-left py-2">Sentence</th>
+                            <th class="text-left py-2">Attempts</th>
+                            <th class="text-left py-2">Best Score</th>
+                            <th class="text-left py-2">Avg Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionHistory">
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-gray-500 dark:text-gray-400">No sessions recorded</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-8 text-sm text-gray-500">
+            <p>SLP Voice Lab Intonation Trainer v1.0 | Professional Speech Therapy Tool</p>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // PWA Install functionality
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.remove('hidden');
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    installBanner.classList.add('hidden');
+                }
+            });
+        }
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                installBanner.classList.add('hidden');
+            });
+        }
+
+        // Intonation Trainer App
+        class IntonationTrainer {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.frequencyData = null;
+                this.isRunning = false;
+                
+                this.modelPitchData = [];
+                this.studentPitchData = [];
+                this.isRecordingModel = false;
+                this.isPracticing = false;
+                this.canvas = null;
+                this.ctx = null;
+                this.animationFrame = null;
+                
+                this.currentScore = 0;
+                this.bestScore = 0;
+                this.attempts = 0;
+                this.sessionScores = [];
+                
+                this.sessionHistory = JSON.parse(localStorage.getItem('intonationTrainerHistory') || '[]');
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.initializeCanvas();
+                this.loadSessionHistory();
+                console.log('Intonation Trainer initialized');
+            }
+
+            setupEventListeners() {
+                // Model recording
+                document.getElementById('recordModel').addEventListener('click', () => this.startModelRecording());
+                document.getElementById('stopModelRecording').addEventListener('click', () => this.stopModelRecording());
+                document.getElementById('playModel').addEventListener('click', () => this.playModel());
+                document.getElementById('clearModel').addEventListener('click', () => this.clearModel());
+                
+                // Student practice
+                document.getElementById('startPractice').addEventListener('click', () => this.startPractice());
+                document.getElementById('stopPractice').addEventListener('click', () => this.stopPractice());
+                
+                // Text updates
+                document.getElementById('practiceText').addEventListener('input', (e) => {
+                    const text = e.target.value;
+                    document.getElementById('displaySentence').textContent = `"${text}"`;
+                    document.getElementById('practiceDisplay').textContent = `"${text}"`;
+                });
+                
+                document.getElementById('exportData').addEventListener('click', () => this.exportData());
+            }
+
+            initializeCanvas() {
+                this.canvas = document.getElementById('intonationCanvas');
+                if (this.canvas) {
+                    this.ctx = this.canvas.getContext('2d');
+                    this.resizeCanvas();
+                    window.addEventListener('resize', () => this.resizeCanvas());
+                }
+            }
+
+            resizeCanvas() {
+                if (!this.canvas) return;
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.drawCanvas();
+            }
+
+            drawCanvas() {
+                if (!this.ctx) return;
+                
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // Clear canvas
+                this.ctx.clearRect(0, 0, width, height);
+                
+                // Draw grid
+                this.ctx.strokeStyle = '#E5E7EB';
+                this.ctx.lineWidth = 1;
+                for (let i = 0; i <= 10; i++) {
+                    const y = (height / 10) * i;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(width, y);
+                    this.ctx.stroke();
+                }
+                
+                // Draw frequency labels
+                this.ctx.fillStyle = '#6B7280';
+                this.ctx.font = '12px sans-serif';
+                for (let i = 0; i <= 5; i++) {
+                    const freq = 60 + (i * 68); // 60Hz to 400Hz in 5 steps
+                    const y = height - (i / 5) * height;
+                    this.ctx.fillText(freq + ' Hz', 5, y);
+                }
+                
+                // Draw model pitch data (green)
+                if (this.modelPitchData.length > 1) {
+                    this.ctx.strokeStyle = '#10B981';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    
+                    for (let i = 0; i < this.modelPitchData.length; i++) {
+                        const x = (width / this.modelPitchData.length) * i;
+                        const pitch = this.modelPitchData[i];
+                        const y = height - ((pitch - 60) / (400 - 60)) * height;
+                        
+                        if (i === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.stroke();
+                }
+                
+                // Draw student pitch data (blue)
+                if (this.studentPitchData.length > 1) {
+                    this.ctx.strokeStyle = '#3B82F6';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    
+                    for (let i = 0; i < this.studentPitchData.length; i++) {
+                        const x = (width / this.studentPitchData.length) * i;
+                        const pitch = this.studentPitchData[i];
+                        const y = height - ((pitch - 60) / (400 - 60)) * height;
+                        
+                        if (i === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.stroke();
+                }
+            }
+
+            async startModelRecording() {
+                if (!this.audioContext) {
+                    await this.initializeAudio();
+                }
+                
+                this.modelPitchData = [];
+                this.isRecordingModel = true;
+                
+                document.getElementById('recordModel').disabled = true;
+                document.getElementById('stopModelRecording').disabled = false;
+                document.getElementById('modelStatus').textContent = 'Recording model... Speak now!';
+                document.getElementById('modelStatus').className = 'text-center text-lg font-medium text-red-600 dark:text-red-400';
+                
+                this.startAudioAnalysis();
+            }
+
+            stopModelRecording() {
+                this.isRecordingModel = false;
+                
+                document.getElementById('recordModel').disabled = false;
+                document.getElementById('stopModelRecording').disabled = true;
+                document.getElementById('playModel').disabled = false;
+                document.getElementById('clearModel').disabled = false;
+                document.getElementById('startPractice').disabled = false;
+                
+                if (this.modelPitchData.length > 0) {
+                    document.getElementById('modelStatus').textContent = `Model recorded! (${this.modelPitchData.length} data points)`;
+                    document.getElementById('modelStatus').className = 'text-center text-lg font-medium text-green-600 dark:text-green-400';
+                } else {
+                    document.getElementById('modelStatus').textContent = 'No voice detected. Please try again.';
+                    document.getElementById('modelStatus').className = 'text-center text-lg font-medium text-yellow-600 dark:text-yellow-400';
+                }
+                
+                this.drawCanvas();
+                this.stopAudioAnalysis();
+            }
+
+            playModel() {
+                document.getElementById('modelStatus').textContent = 'Playing model pattern visualization...';
+                document.getElementById('modelStatus').className = 'text-center text-lg font-medium text-blue-600 dark:text-blue-400';
+                
+                setTimeout(() => {
+                    document.getElementById('modelStatus').textContent = `Model ready! (${this.modelPitchData.length} data points)`;
+                    document.getElementById('modelStatus').className = 'text-center text-lg font-medium text-green-600 dark:text-green-400';
+                }, 2000);
+            }
+
+            clearModel() {
+                this.modelPitchData = [];
+                this.studentPitchData = [];
+                document.getElementById('playModel').disabled = true;
+                document.getElementById('clearModel').disabled = true;
+                document.getElementById('startPractice').disabled = true;
+                document.getElementById('modelStatus').textContent = 'Model cleared. Record a new model.';
+                document.getElementById('modelStatus').className = 'text-center text-lg font-medium text-gray-600 dark:text-gray-400';
+                this.drawCanvas();
+                
+                // Reset scores
+                this.currentScore = 0;
+                this.bestScore = 0;
+                this.attempts = 0;
+                this.sessionScores = [];
+                this.updateScoreDisplay();
+            }
+
+            async startPractice() {
+                if (!this.audioContext) {
+                    await this.initializeAudio();
+                }
+                
+                this.studentPitchData = [];
+                this.isPracticing = true;
+                this.attempts++;
+                
+                document.getElementById('startPractice').disabled = true;
+                document.getElementById('stopPractice').disabled = false;
+                document.getElementById('practiceStatus').textContent = '🎤 Recording your attempt... Speak now!';
+                document.getElementById('practiceStatus').className = 'text-center mt-4 text-lg font-medium text-red-600 dark:text-red-400';
+                
+                this.startAudioAnalysis();
+            }
+
+            stopPractice() {
+                this.isPracticing = false;
+                
+                document.getElementById('startPractice').disabled = false;
+                document.getElementById('stopPractice').disabled = true;
+                
+                if (this.studentPitchData.length > 0) {
+                    this.calculateScore();
+                    document.getElementById('practiceStatus').textContent = `Practice complete! Score: ${Math.round(this.currentScore)}`;
+                    document.getElementById('practiceStatus').className = 'text-center mt-4 text-lg font-medium text-green-600 dark:text-green-400';
+                } else {
+                    document.getElementById('practiceStatus').textContent = 'No voice detected. Please try again.';
+                    document.getElementById('practiceStatus').className = 'text-center mt-4 text-lg font-medium text-yellow-600 dark:text-yellow-400';
+                }
+                
+                this.drawCanvas();
+                this.stopAudioAnalysis();
+                this.updateScoreDisplay();
+            }
+
+            async initializeAudio() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        autoGainControl: false,
+                        noiseSuppression: false
+                    } 
+                });
+                
+                this.microphone = this.audioContext.createMediaStreamSource(stream);
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 4096;
+                this.analyser.smoothingTimeConstant = 0.3;
+                
+                this.microphone.connect(this.analyser);
+                this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+                this.isRunning = true;
+            }
+
+            startAudioAnalysis() {
+                const analyze = () => {
+                    if (!this.isRunning || (!this.isRecordingModel && !this.isPracticing)) return;
+                    
+                    this.analyser.getByteFrequencyData(this.frequencyData);
+                    const pitch = this.detectPitch();
+                    
+                    if (pitch > 0) {
+                        if (this.isRecordingModel) {
+                            this.modelPitchData.push(pitch);
+                        } else if (this.isPracticing) {
+                            this.studentPitchData.push(pitch);
+                        }
+                        this.drawCanvas();
+                    }
+                    
+                    this.animationFrame = requestAnimationFrame(analyze);
+                };
+                analyze();
+            }
+
+            stopAudioAnalysis() {
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                    this.animationFrame = null;
+                }
+            }
+
+            detectPitch() {
+                const sampleRate = this.audioContext.sampleRate;
+                const nyquist = sampleRate / 2;
+                const frequencyResolution = nyquist / this.frequencyData.length;
+                
+                let maxAmplitude = 0;
+                let dominantFrequency = 0;
+                
+                const minBin = Math.floor(60 / frequencyResolution);
+                const maxBin = Math.floor(400 / frequencyResolution);
+                
+                for (let i = minBin; i < maxBin && i < this.frequencyData.length; i++) {
+                    if (this.frequencyData[i] > maxAmplitude) {
+                        maxAmplitude = this.frequencyData[i];
+                        dominantFrequency = i * frequencyResolution;
+                    }
+                }
+                
+                return maxAmplitude > 80 ? dominantFrequency : 0;
+            }
+
+            calculateScore() {
+                if (this.modelPitchData.length === 0 || this.studentPitchData.length === 0) {
+                    this.currentScore = 0;
+                    return;
+                }
+                
+                // Normalize arrays to same length for comparison
+                const maxLength = Math.max(this.modelPitchData.length, this.studentPitchData.length);
+                const modelNormalized = this.interpolateArray(this.modelPitchData, maxLength);
+                const studentNormalized = this.interpolateArray(this.studentPitchData, maxLength);
+                
+                // Calculate pattern similarity
+                let totalDifference = 0;
+                let validPoints = 0;
+                
+                for (let i = 0; i < maxLength; i++) {
+                    if (modelNormalized[i] > 0 && studentNormalized[i] > 0) {
+                        const difference = Math.abs(modelNormalized[i] - studentNormalized[i]);
+                        const percentDifference = difference / modelNormalized[i];
+                        totalDifference += Math.min(percentDifference, 1); // Cap at 100% difference
+                        validPoints++;
+                    }
+                }
+                
+                if (validPoints > 0) {
+                    const averageDifference = totalDifference / validPoints;
+                    this.currentScore = Math.max(0, (1 - averageDifference) * 100);
+                } else {
+                    this.currentScore = 0;
+                }
+                
+                // Update best score
+                if (this.currentScore > this.bestScore) {
+                    this.bestScore = this.currentScore;
+                }
+                
+                this.sessionScores.push(this.currentScore);
+                
+                // Update pattern score display
+                document.getElementById('patternScore').textContent = Math.round(this.currentScore) + '%';
+            }
+
+            interpolateArray(array, targetLength) {
+                if (array.length === 0) return new Array(targetLength).fill(0);
+                if (array.length === targetLength) return array;
+                
+                const result = [];
+                for (let i = 0; i < targetLength; i++) {
+                    const sourceIndex = (i / (targetLength - 1)) * (array.length - 1);
+                    const lowerIndex = Math.floor(sourceIndex);
+                    const upperIndex = Math.ceil(sourceIndex);
+                    const weight = sourceIndex - lowerIndex;
+                    
+                    if (lowerIndex === upperIndex) {
+                        result.push(array[lowerIndex]);
+                    } else {
+                        const interpolated = array[lowerIndex] * (1 - weight) + array[upperIndex] * weight;
+                        result.push(interpolated);
+                    }
+                }
+                return result;
+            }
+
+            updateScoreDisplay() {
+                document.getElementById('currentScore').textContent = Math.round(this.currentScore);
+                document.getElementById('bestScore').textContent = Math.round(this.bestScore);
+                document.getElementById('attempts').textContent = this.attempts;
+            }
+
+            saveSessionData() {
+                if (this.sessionScores.length === 0) return;
+                
+                const averageScore = this.sessionScores.reduce((sum, score) => sum + score, 0) / this.sessionScores.length;
+                
+                const sessionData = {
+                    clientName: document.getElementById('clientName').value,
+                    date: new Date().toLocaleDateString(),
+                    time: new Date().toLocaleTimeString(),
+                    sentence: document.getElementById('practiceText').value,
+                    attempts: this.attempts,
+                    bestScore: Math.round(this.bestScore),
+                    averageScore: Math.round(averageScore),
+                    scores: this.sessionScores.map(s => Math.round(s))
+                };
+                
+                this.sessionHistory.unshift(sessionData);
+                if (this.sessionHistory.length > 50) {
+                    this.sessionHistory = this.sessionHistory.slice(0, 50);
+                }
+                localStorage.setItem('intonationTrainerHistory', JSON.stringify(this.sessionHistory));
+                this.loadSessionHistory();
+            }
+
+            loadSessionHistory() {
+                const tbody = document.getElementById('sessionHistory');
+                tbody.innerHTML = '';
+                
+                if (this.sessionHistory.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500 dark:text-gray-400">No sessions recorded</td></tr>';
+                    return;
+                }
+                
+                this.sessionHistory.slice(0, 10).forEach(session => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="py-2">${session.clientName}</td>
+                        <td class="py-2">${session.date}</td>
+                        <td class="py-2 max-w-xs truncate">${session.sentence}</td>
+                        <td class="py-2">${session.attempts}</td>
+                        <td class="py-2 font-medium">${session.bestScore}</td>
+                        <td class="py-2">${session.averageScore}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            exportData() {
+                if (this.sessionHistory.length === 0) {
+                    this.showAlert('No session data to export.');
+                    return;
+                }
+                
+                const headers = ['Client Name', 'Date', 'Time', 'Sentence', 'Attempts', 'Best Score', 'Average Score', 'All Scores'];
+                const csvContent = [
+                    headers.join(','),
+                    ...this.sessionHistory.map(session => [
+                        `"${session.clientName}"`,
+                        `"${session.date}"`,
+                        `"${session.time}"`,
+                        `"${session.sentence}"`,
+                        session.attempts,
+                        session.bestScore,
+                        session.averageScore,
+                        `"${session.scores ? session.scores.join(';') : ''}"`
+                    ].join(','))
+                ].join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `intonation_trainer_data_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Save current session if there are scores
+                this.saveSessionData();
+            }
+
+            showAlert(message) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                        <div class="flex justify-end">
+                            <button class="px-4 py-2 bg-primary text-white hover:bg-yellow-600 rounded" onclick="this.closest('.fixed').remove()">OK</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            const intonationTrainer = new IntonationTrainer();
+            window.intonationTrainer = intonationTrainer;
+            console.log('SLP Voice Lab Intonation Trainer ready!');
+        });
+    </script>
+</body>
+</html>
