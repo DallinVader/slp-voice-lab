@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLP Voice Lab Pitch Trainer</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#8B5CF6">
+    <meta name="description" content="Professional voice pitch control training for speech therapy">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Pitch Trainer">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8B5CF6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
+    
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="hidden fixed top-0 left-0 right-0 bg-primary text-white p-3 z-50">
+        <div class="flex items-center justify-between max-w-4xl mx-auto">
+            <span>📱 Install Pitch Trainer for offline use</span>
+            <div>
+                <button id="installBtn" class="bg-white text-primary px-3 py-1 rounded text-sm mr-2">Install</button>
+                <button id="dismissBtn" class="text-white opacity-75">✕</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🎵</div>
+            <h1 class="text-3xl font-bold mb-2">SLP Voice Lab</h1>
+            <h2 class="text-xl text-primary font-semibold">Pitch Trainer</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Professional voice pitch control training</p>
+            <a href="../" class="text-blue-500 hover:text-blue-700 text-sm mt-2 inline-block">← Back to Main Menu</a>
+        </div>
+        
+        <!-- Setup Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">Session Setup</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Client Name</label>
+                    <input type="text" id="clientName" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter client name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Session Duration (minutes)</label>
+                    <input type="number" id="sessionDuration" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent" value="5" min="1" max="60">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Points per second</label>
+                    <input type="number" id="pitchPoints" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent" value="10" min="1" max="100">
+                </div>
+            </div>
+            
+            <!-- Pitch Target Zone -->
+            <div class="bg-white dark:bg-gray-700 rounded-lg p-4">
+                <h4 class="font-semibold mb-4 text-primary">🎯 Target Pitch Zone</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Voice Type Presets</label>
+                        <select id="voicePreset" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="custom">Custom</option>
+                            <option value="adult-male">Adult Male (85-180 Hz)</option>
+                            <option value="adult-female">Adult Female (165-265 Hz)</option>
+                            <option value="child">Child (200-400 Hz)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Minimum Pitch (Hz)</label>
+                        <input type="range" id="minPitch" min="60" max="400" value="100" class="w-full">
+                        <span id="minPitchValue" class="text-sm text-gray-600 dark:text-gray-400">100 Hz</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Maximum Pitch (Hz)</label>
+                        <input type="range" id="maxPitch" min="60" max="400" value="200" class="w-full">
+                        <span id="maxPitchValue" class="text-sm text-gray-600 dark:text-gray-400">200 Hz</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Voice Pitch Training</h3>
+                <button id="startSession" class="bg-primary text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium text-lg">Start Training</button>
+            </div>
+            
+            <!-- Large Digital Display -->
+            <div class="text-center mb-8">
+                <div id="pitchDisplay" class="text-9xl font-bold text-gray-800 dark:text-gray-200 mb-4">-- Hz</div>
+                <div id="pitchStatus" class="text-3xl font-semibold px-8 py-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                    Click Start Training
+                </div>
+            </div>
+            
+            <!-- Visual Meter with Target Zone -->
+            <div class="relative mb-8">
+                <div class="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden relative">
+                    <div id="pitchTargetZone" class="absolute top-0 h-full bg-purple-200 dark:bg-purple-800 bg-opacity-60 border-2 border-purple-400 rounded-xl transition-all duration-300"></div>
+                    <div id="pitchIndicator" class="absolute top-0 h-full w-6 bg-yellow-400 border-2 border-yellow-600 rounded-full transition-all duration-100 z-20" style="left: 0%"></div>
+                    <div id="pitchMinMarker" class="absolute top-0 h-full w-3 bg-purple-600 z-10"></div>
+                    <div id="pitchMaxMarker" class="absolute top-0 h-full w-3 bg-purple-600 z-10"></div>
+                </div>
+                <div class="flex justify-between text-lg text-gray-600 dark:text-gray-400 mt-3">
+                    <span>60 Hz<br><span class="text-sm">Low Pitch</span></span>
+                    <span id="pitchTargetLabel" class="font-bold text-purple-600 dark:text-purple-400 text-center">Target: 100-200 Hz</span>
+                    <span>400 Hz<br><span class="text-sm">High Pitch</span></span>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="text-center text-lg bg-purple-50 dark:bg-purple-900 p-6 rounded-lg mb-6">
+                <div class="font-bold mb-2 text-2xl">🎵 Instructions</div>
+                <div>Keep your voice pitch in the <span class="text-purple-600 dark:text-purple-400 font-bold">purple target zone</span> to earn points!</div>
+                <div class="mt-2 text-sm">Practice sustained vowels, scales, or reading at the target pitch level.</div>
+            </div>
+
+            <!-- Session Controls -->
+            <div class="flex flex-wrap gap-4 justify-center mb-6">
+                <button id="stopSession" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium disabled:opacity-50" disabled>Stop Training</button>
+                <button id="pauseSession" class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors font-medium disabled:opacity-50" disabled>Pause</button>
+            </div>
+            
+            <!-- Session Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-primary" id="currentScore">0</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Score</div>
+                </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-700 dark:text-gray-300" id="timeRemaining">--:--</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Time Left</div>
+                </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600" id="accuracyPercent">--</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Accuracy</div>
+                </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600" id="timeInZone">--</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Time in Zone</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session History -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Session History</h3>
+                <button id="exportData" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm">📊 Export CSV</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-2">Client</th>
+                            <th class="text-left py-2">Date</th>
+                            <th class="text-left py-2">Duration</th>
+                            <th class="text-left py-2">Score</th>
+                            <th class="text-left py-2">Accuracy</th>
+                            <th class="text-left py-2">Target Zone</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionHistory">
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-gray-500 dark:text-gray-400">No sessions recorded</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-8 text-sm text-gray-500">
+            <p>SLP Voice Lab Pitch Trainer v1.0 | Professional Speech Therapy Tool</p>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // PWA Install functionality
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.remove('hidden');
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    installBanner.classList.add('hidden');
+                }
+            });
+        }
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                installBanner.classList.add('hidden');
+            });
+        }
+
+        // Pitch Trainer App
+        class PitchTrainer {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.dataArray = null;
+                this.frequencyData = null;
+                this.isRunning = false;
+                this.sessionActive = false;
+                this.sessionStartTime = null;
+                this.sessionDuration = 5;
+                this.sessionTimer = null;
+                this.animationFrame = null;
+                
+                this.currentScore = 0;
+                this.timeInZone = 0;
+                this.totalTime = 0;
+                this.lastUpdateTime = Date.now();
+                
+                // Pitch detection properties
+                this.pitchHistory = [];
+                this.smoothedPitch = 0;
+                this.lastDisplayedPitch = 0;
+                this.pitchStabilityCounter = 0;
+                this.lastUIUpdate = Date.now();
+                this.uiUpdateInterval = 200;
+                
+                this.sessionHistory = JSON.parse(localStorage.getItem('pitchTrainerHistory') || '[]');
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateTargetZone();
+                this.loadSessionHistory();
+                console.log('Pitch Trainer initialized');
+            }
+
+            setupEventListeners() {
+                document.getElementById('startSession').addEventListener('click', () => this.startSession());
+                document.getElementById('stopSession').addEventListener('click', () => this.stopSession());
+                document.getElementById('pauseSession').addEventListener('click', () => this.togglePause());
+                
+                document.getElementById('voicePreset').addEventListener('change', (e) => {
+                    this.applyVoicePreset(e.target.value);
+                });
+                
+                document.getElementById('minPitch').addEventListener('input', (e) => {
+                    document.getElementById('minPitchValue').textContent = e.target.value + ' Hz';
+                    this.updateTargetZone();
+                });
+                document.getElementById('maxPitch').addEventListener('input', (e) => {
+                    document.getElementById('maxPitchValue').textContent = e.target.value + ' Hz';
+                    this.updateTargetZone();
+                });
+                
+                document.getElementById('exportData').addEventListener('click', () => this.exportData());
+            }
+
+            applyVoicePreset(preset) {
+                const presets = {
+                    'adult-male': { min: 85, max: 180 },
+                    'adult-female': { min: 165, max: 265 },
+                    'child': { min: 200, max: 400 }
+                };
+                
+                if (presets[preset]) {
+                    document.getElementById('minPitch').value = presets[preset].min;
+                    document.getElementById('maxPitch').value = presets[preset].max;
+                    document.getElementById('minPitchValue').textContent = presets[preset].min + ' Hz';
+                    document.getElementById('maxPitchValue').textContent = presets[preset].max + ' Hz';
+                    this.updateTargetZone();
+                }
+            }
+
+            updateTargetZone() {
+                const minPitch = parseInt(document.getElementById('minPitch').value);
+                const maxPitch = parseInt(document.getElementById('maxPitch').value);
+                const pitchRange = 400 - 60;
+                const leftPercent = ((minPitch - 60) / pitchRange) * 100;
+                const widthPercent = ((maxPitch - minPitch) / pitchRange) * 100;
+                
+                const targetZone = document.getElementById('pitchTargetZone');
+                targetZone.style.left = leftPercent + '%';
+                targetZone.style.width = widthPercent + '%';
+                
+                document.getElementById('pitchMinMarker').style.left = leftPercent + '%';
+                document.getElementById('pitchMaxMarker').style.left = (leftPercent + widthPercent) + '%';
+                document.getElementById('pitchTargetLabel').textContent = `Target: ${minPitch}-${maxPitch} Hz`;
+            }
+
+            async startSession() {
+                const clientName = document.getElementById('clientName').value.trim();
+                if (!clientName) {
+                    this.showAlert('Please enter a client name first.');
+                    return;
+                }
+
+                try {
+                    await this.initializeAudio();
+                    this.sessionActive = true;
+                    this.sessionStartTime = Date.now();
+                    this.sessionDuration = parseInt(document.getElementById('sessionDuration').value);
+                    this.currentScore = 0;
+                    this.timeInZone = 0;
+                    this.totalTime = 0;
+                    this.lastUpdateTime = Date.now();
+                    
+                    document.getElementById('startSession').disabled = true;
+                    document.getElementById('stopSession').disabled = false;
+                    document.getElementById('pauseSession').disabled = false;
+                    
+                    this.startTimer();
+                    this.startAudioAnalysis();
+                    
+                    console.log(`Pitch training started for ${clientName}`);
+                    
+                } catch (error) {
+                    console.error('Error starting session:', error);
+                    this.showAlert('Error accessing microphone: ' + error.message + '\n\nPlease ensure:\n1. You are using HTTPS\n2. You have granted microphone permission\n3. Your browser supports Web Audio API');
+                }
+            }
+
+            async initializeAudio() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        autoGainControl: false,
+                        noiseSuppression: false
+                    } 
+                });
+                
+                this.microphone = this.audioContext.createMediaStreamSource(stream);
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 4096;
+                this.analyser.smoothingTimeConstant = 0.3;
+                
+                this.microphone.connect(this.analyser);
+                
+                this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+                
+                this.isRunning = true;
+            }
+
+            startTimer() {
+                this.sessionTimer = setInterval(() => {
+                    if (!this.sessionActive) return;
+                    
+                    const elapsed = (Date.now() - this.sessionStartTime) / 1000;
+                    const remaining = Math.max(0, this.sessionDuration * 60 - elapsed);
+                    
+                    const minutes = Math.floor(remaining / 60);
+                    const seconds = Math.floor(remaining % 60);
+                    document.getElementById('timeRemaining').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    if (remaining <= 0) {
+                        this.stopSession();
+                    }
+                }, 100);
+            }
+
+            startAudioAnalysis() {
+                const analyze = () => {
+                    if (!this.isRunning) return;
+                    
+                    this.analyser.getByteFrequencyData(this.frequencyData);
+                    const pitch = this.detectPitch();
+                    
+                    if (this.sessionActive) {
+                        this.updateUI(pitch);
+                        this.updateScore(pitch);
+                    }
+                    
+                    this.animationFrame = requestAnimationFrame(analyze);
+                };
+                analyze();
+            }
+
+            detectPitch() {
+                const sampleRate = this.audioContext.sampleRate;
+                const nyquist = sampleRate / 2;
+                const frequencyResolution = nyquist / this.frequencyData.length;
+                
+                let maxAmplitude = 0;
+                let dominantFrequency = 0;
+                
+                const minBin = Math.floor(60 / frequencyResolution);
+                const maxBin = Math.floor(400 / frequencyResolution);
+                
+                for (let i = minBin; i < maxBin && i < this.frequencyData.length; i++) {
+                    if (this.frequencyData[i] > maxAmplitude) {
+                        maxAmplitude = this.frequencyData[i];
+                        dominantFrequency = i * frequencyResolution;
+                    }
+                }
+                
+                const rawPitch = maxAmplitude > 80 ? dominantFrequency : 0;
+                
+                // Apply smoothing
+                if (rawPitch > 0) {
+                    this.pitchHistory.push(rawPitch);
+                    if (this.pitchHistory.length > 8) {
+                        this.pitchHistory.shift();
+                    }
+                    
+                    const validPitches = this.pitchHistory.filter(p => p > 0);
+                    if (validPitches.length >= 3) {
+                        const average = validPitches.reduce((sum, p) => sum + p, 0) / validPitches.length;
+                        this.smoothedPitch = average;
+                        
+                        const deviation = validPitches.reduce((sum, p) => sum + Math.abs(p - average), 0) / validPitches.length;
+                        if (deviation < 20) {
+                            this.pitchStabilityCounter++;
+                            return this.smoothedPitch;
+                        }
+                    }
+                }
+                
+                if (this.pitchStabilityCounter > 0) {
+                    this.pitchStabilityCounter--;
+                    return this.smoothedPitch;
+                }
+                
+                return 0;
+            }
+
+            updateUI(pitch) {
+                const now = Date.now();
+                
+                if (now - this.lastUIUpdate < this.uiUpdateInterval) {
+                    return;
+                }
+                this.lastUIUpdate = now;
+                
+                if (pitch > 0) {
+                    const pitchDifference = Math.abs(pitch - this.lastDisplayedPitch);
+                    if (pitchDifference > 10 || this.lastDisplayedPitch === 0) {
+                        this.lastDisplayedPitch = pitch;
+                        
+                        document.getElementById('pitchDisplay').textContent = Math.round(pitch) + ' Hz';
+                        const pitchPercent = ((pitch - 60) / (400 - 60)) * 100;
+                        const clampedPercent = Math.max(0, Math.min(94, pitchPercent));
+                        
+                        document.getElementById('pitchIndicator').style.left = clampedPercent + '%';
+                        
+                        const minPitch = parseInt(document.getElementById('minPitch').value);
+                        const maxPitch = parseInt(document.getElementById('maxPitch').value);
+                        const pitchInZone = pitch >= minPitch && pitch <= maxPitch;
+                        
+                        const statusElement = document.getElementById('pitchStatus');
+                        const displayElement = document.getElementById('pitchDisplay');
+                        
+                        if (pitchInZone) {
+                            statusElement.textContent = '✅ Perfect Pitch!';
+                            statusElement.className = 'text-3xl font-semibold px-8 py-4 rounded-full bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 border-2 border-green-400';
+                            displayElement.className = 'text-9xl font-bold text-green-600 dark:text-green-400 mb-4';
+                        } else if (pitch < minPitch) {
+                            statusElement.textContent = '⬆️ Pitch Higher';
+                            statusElement.className = 'text-3xl font-semibold px-8 py-4 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 border-2 border-blue-400';
+                            displayElement.className = 'text-9xl font-bold text-blue-600 dark:text-blue-400 mb-4';
+                        } else {
+                            statusElement.textContent = '⬇️ Pitch Lower';
+                            statusElement.className = 'text-3xl font-semibold px-8 py-4 rounded-full bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 border-2 border-orange-400';
+                            displayElement.className = 'text-9xl font-bold text-orange-600 dark:text-orange-400 mb-4';
+                        }
+                        
+                        document.getElementById('pitchIndicator').style.opacity = '1';
+                    }
+                } else {
+                    if (this.lastDisplayedPitch !== 0) {
+                        setTimeout(() => {
+                            if (this.detectPitch() === 0) {
+                                document.getElementById('pitchDisplay').textContent = '-- Hz';
+                                document.getElementById('pitchDisplay').className = 'text-9xl font-bold text-gray-500 dark:text-gray-400 mb-4';
+                                const statusElement = document.getElementById('pitchStatus');
+                                statusElement.textContent = '🎤 Speak Clearly';
+                                statusElement.className = 'text-3xl font-semibold px-8 py-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+                                document.getElementById('pitchIndicator').style.opacity = '0.3';
+                                this.lastDisplayedPitch = 0;
+                            }
+                        }, 500);
+                    }
+                }
+            }
+
+            updateScore(pitch) {
+                const now = Date.now();
+                const deltaTime = (now - this.lastUpdateTime) / 1000;
+                this.lastUpdateTime = now;
+                this.totalTime += deltaTime;
+                
+                const minPitch = parseInt(document.getElementById('minPitch').value);
+                const maxPitch = parseInt(document.getElementById('maxPitch').value);
+                const pitchInZone = pitch > 0 && pitch >= minPitch && pitch <= maxPitch;
+                
+                if (pitchInZone) {
+                    const pointsPerSecond = parseInt(document.getElementById('pitchPoints').value);
+                    this.currentScore += pointsPerSecond * deltaTime;
+                    this.timeInZone += deltaTime;
+                }
+                
+                document.getElementById('currentScore').textContent = Math.round(this.currentScore);
+                
+                const accuracy = this.totalTime > 0 ? (this.timeInZone / this.totalTime) * 100 : 0;
+                document.getElementById('accuracyPercent').textContent = Math.round(accuracy) + '%';
+                
+                const timeInZoneMin = Math.floor(this.timeInZone / 60);
+                const timeInZoneSec = Math.floor(this.timeInZone % 60);
+                document.getElementById('timeInZone').textContent = `${timeInZoneMin}:${timeInZoneSec.toString().padStart(2, '0')}`;
+            }
+
+            stopSession() {
+                this.sessionActive = false;
+                this.isRunning = false;
+                
+                if (this.sessionTimer) {
+                    clearInterval(this.sessionTimer);
+                    this.sessionTimer = null;
+                }
+                
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                    this.animationFrame = null;
+                }
+                
+                if (this.audioContext) {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                }
+                
+                document.getElementById('startSession').disabled = false;
+                document.getElementById('stopSession').disabled = true;
+                document.getElementById('pauseSession').disabled = true;
+                
+                this.resetUI();
+                this.saveSessionData();
+                document.getElementById('timeRemaining').textContent = '--:--';
+            }
+
+            resetUI() {
+                document.getElementById('pitchDisplay').textContent = '-- Hz';
+                document.getElementById('pitchDisplay').className = 'text-9xl font-bold text-gray-800 dark:text-gray-200 mb-4';
+                document.getElementById('pitchStatus').textContent = 'Session Complete!';
+                document.getElementById('pitchStatus').className = 'text-3xl font-semibold px-8 py-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+                document.getElementById('pitchIndicator').style.opacity = '0.3';
+            }
+
+            togglePause() {
+                this.sessionActive = !this.sessionActive;
+                const pauseBtn = document.getElementById('pauseSession');
+                pauseBtn.textContent = this.sessionActive ? 'Pause' : 'Resume';
+                
+                if (this.sessionActive) {
+                    this.sessionStartTime = Date.now() - (this.sessionDuration * 60 * 1000 - this.getRemainingTime() * 1000);
+                    this.lastUpdateTime = Date.now();
+                }
+            }
+
+            getRemainingTime() {
+                const timeText = document.getElementById('timeRemaining').textContent;
+                if (timeText === '--:--') return 0;
+                const [minutes, seconds] = timeText.split(':').map(Number);
+                return minutes * 60 + seconds;
+            }
+
+            saveSessionData() {
+                const accuracy = this.totalTime > 0 ? (this.timeInZone / this.totalTime) * 100 : 0;
+                const minPitch = parseInt(document.getElementById('minPitch').value);
+                const maxPitch = parseInt(document.getElementById('maxPitch').value);
+                
+                const sessionData = {
+                    clientName: document.getElementById('clientName').value,
+                    date: new Date().toLocaleDateString(),
+                    time: new Date().toLocaleTimeString(),
+                    duration: this.sessionDuration,
+                    score: Math.round(this.currentScore),
+                    accuracy: Math.round(accuracy),
+                    timeInZone: Math.round(this.timeInZone),
+                    targetZone: `${minPitch}-${maxPitch} Hz`,
+                    totalTime: Math.round(this.totalTime)
+                };
+                
+                this.sessionHistory.unshift(sessionData);
+                if (this.sessionHistory.length > 50) {
+                    this.sessionHistory = this.sessionHistory.slice(0, 50);
+                }
+                localStorage.setItem('pitchTrainerHistory', JSON.stringify(this.sessionHistory));
+                this.loadSessionHistory();
+            }
+
+            loadSessionHistory() {
+                const tbody = document.getElementById('sessionHistory');
+                tbody.innerHTML = '';
+                
+                if (this.sessionHistory.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500 dark:text-gray-400">No sessions recorded</td></tr>';
+                    return;
+                }
+                
+                this.sessionHistory.slice(0, 10).forEach(session => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="py-2">${session.clientName}</td>
+                        <td class="py-2">${session.date}</td>
+                        <td class="py-2">${session.duration} min</td>
+                        <td class="py-2 font-medium">${session.score}</td>
+                        <td class="py-2">${session.accuracy}%</td>
+                        <td class="py-2">${session.targetZone}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            exportData() {
+                if (this.sessionHistory.length === 0) {
+                    this.showAlert('No session data to export.');
+                    return;
+                }
+                
+                const headers = ['Client Name', 'Date', 'Time', 'Duration (min)', 'Score', 'Accuracy (%)', 'Time in Zone (s)', 'Target Zone', 'Total Time (s)'];
+                const csvContent = [
+                    headers.join(','),
+                    ...this.sessionHistory.map(session => [
+                        `"${session.clientName}"`,
+                        `"${session.date}"`,
+                        `"${session.time}"`,
+                        session.duration,
+                        session.score,
+                        session.accuracy,
+                        session.timeInZone,
+                        `"${session.targetZone}"`,
+                        session.totalTime
+                    ].join(','))
+                ].join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pitch_trainer_data_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            showAlert(message) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                        <div class="flex justify-end">
+                            <button class="px-4 py-2 bg-primary text-white hover:bg-purple-700 rounded" onclick="this.closest('.fixed').remove()">OK</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            const pitchTrainer = new PitchTrainer();
+            window.pitchTrainer = pitchTrainer;
+            console.log('SLP Voice Lab Pitch Trainer ready!');
+        });
+    </script>
+</body>
+</html>
